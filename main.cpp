@@ -146,8 +146,20 @@ public:
     }
 
 
+    //Valid Email(Contain @ and .)
+    bool IsValidEmail(const string& email){
+        auto atPos = email.find('@');
+        auto dotPos = email.find('.', atPos);
+
+        if (atPos == string::npos || dotPos == string::npos || atPos == 0 || dotPos <= atPos + 1 || dotPos == email.length() - 1) {
+            return false;
+        }
+        return true;
+    }
 
 
+
+    // Registration Function.
 
     void RegisterStudent(Student& student){
     string input;
@@ -179,7 +191,7 @@ public:
     }
 
 
-    //Percentage
+    //Percentage Input
     while(true){
         cout<<"Enter percentage(only number and without decimal e.g. 55 ): ";
         cin>>input;
@@ -191,7 +203,7 @@ public:
         }
     }
 
-    // Date of Birth
+    // Date of Birth Input
     while (true) {
         cout << "Enter DOB (dd-mm-yyyy): ";
         cin >> input;
@@ -203,7 +215,7 @@ public:
         }
     }
 
-    // Phone Number
+    // Phone Number Input
     while (true) {
         cout << "Enter Phone Number (10 digits): ";
         cin >> input;
@@ -211,7 +223,7 @@ public:
         if (student.getPhoneNo() == input) break; // Only accepted if set successfully
     }
 
-    // Aadhar Number
+    // Aadhar Number Input
     while (true) {
         cout << "Enter Aadhar Number (12 digits): ";
         cin >> input;
@@ -219,7 +231,38 @@ public:
         if (student.getAadhar() == input) break; // Only accepted if set successfully
     }
 
+    // Password Input
+    while (true) {
+        string pass1, pass2;
+        cout << "Create a password (min 6 characters): ";
+        cin >> pass1;
+        cout << "Confirm your password: ";
+        cin >> pass2;
+
+        if (pass1 == pass2 && pass1.length() >= 6) {
+            student.Password = pass1;
+            break;
+        } else {
+            cout << "Passwords do not match or too short (min 6 characters). Try again." << endl;
+        }
     }
+
+    // Email Input
+    while (true) {
+        cout << "Enter Email: ";
+        cin >> input;
+        if (student.IsValidEmail(input)) {
+            student.email = input;
+            break;
+        } else {
+            cout << "Invalid email format. Example: example@domain.com" << endl;
+        }
+    }
+
+
+    }
+
+    
 };
 
 
@@ -240,6 +283,7 @@ int main(){
     cout << "DOB        : " << student.DOB << endl;
     cout << "Phone No.  : " << student.getPhoneNo() << endl;
     cout << "Aadhar No. : " << student.getAadhar() << endl;
+    cout << "Email      : " << student.email << endl;
 
     return 0;
 }
