@@ -8,12 +8,15 @@ class Course{
 public:
     string name;
     string code;
-    int MinPersentage;
+    int MinPercentage;
     int seat;
     int enrolled;
 
-    bool IsEligible(int persentage) const{
-        return persentage >= MinPersentage;
+    Course(string name,string code,int MinPersentage,int seat)
+        : name(name), code(code), MinPercentage(MinPercentage), seat(seat), enrolled(0) {}
+
+    bool IsEligible(int percentage) const{
+        return percentage >= MinPercentage;
     }
 
     bool IsVacant() const{
@@ -258,8 +261,6 @@ public:
             cout << "Invalid email format. Example: example@domain.com" << endl;
         }
     }
-
-
     }
 
     
@@ -274,6 +275,16 @@ int main(){
     cout << "----------------------------------------" << endl;
     cout << " Welcome to our course registration system" << endl;
     cout << "----------------------------------------\n" << endl;
+
+    vector<Course> courses = {
+        Course("JEE Advanced Batch", "ADVJEE", 90, 20),
+        Course("Main + Advanced Combo Batch", "COMBOJEE", 85, 30),
+        Course("JEE Mains Only Batch", "MAINJEE", 75, 35),
+        Course("Crash Course (30 Days)", "CRASH30", 65, 40),
+        Course("One-Shot Revision Batch", "ONESHOT", 60, 50),
+        Course("Question Bank Solving Course", "QBSOLVE", 55, 50),
+        Course("PYQ Practice Batch", "PYQBATCH", 50, 60)
+    };
 
     Student student;
     student.RegisterStudent(student);  //Function call
