@@ -2,6 +2,7 @@
 #include <vector>
 #include <algorithm>
 #include <cctype> // for isdigit
+#include <fstream> // for file
 using namespace std;
 
 class Course{
@@ -164,15 +165,15 @@ public:
 
     // Registration Function.
 
-    void RegisterStudent(Student& student){
+    void RegisterStudent(){
     string input;
         
     // First Name Input.
     while(true){
         cout<<"Enter your first name: ";
         cin>>input;
-        if(student.IsValidfname(input)){
-            student.fname=input;
+        if(IsValidfname(input)){
+            fname=input;
             break;
         }
         else{
@@ -184,8 +185,8 @@ public:
     while(true){
         cout<<"Enter your last name: ";
         cin>>input;
-        if(student.IsValidlname(input)){
-            student.lname=input;
+        if(IsValidlname(input)){
+            lname=input;
             break;
         }
         else{
@@ -198,8 +199,8 @@ public:
     while(true){
         cout<<"Enter percentage(only number and without decimal e.g. 55 ): ";
         cin>>input;
-         if (student.IsValidPercentage(input)) {
-            student.percentage = stoi(input);
+         if (IsValidPercentage(input)) {
+            percentage = stoi(input);
             break;
         } else {
             cout << "Enter percentage (only whole numbers, e.g., 55): " << endl;
@@ -210,8 +211,8 @@ public:
     while (true) {
         cout << "Enter DOB (dd-mm-yyyy): ";
         cin >> input;
-        if (student.IsValidDOB(input)) {
-            student.DOB = input;
+        if (IsValidDOB(input)) {
+            DOB = input;
             break;
         } else {
             cout << "Invalid DOB format. Please use dd-mm-yyyy." << endl;
@@ -222,16 +223,16 @@ public:
     while (true) {
         cout << "Enter Phone Number (10 digits): ";
         cin >> input;
-        student.setPhoneNo(input);
-        if (student.getPhoneNo() == input) break; // Only accepted if set successfully
+        setPhoneNo(input);
+        if (getPhoneNo() == input) break; // Only accepted if set successfully
     }
 
     // Aadhar Number Input
     while (true) {
         cout << "Enter Aadhar Number (12 digits): ";
         cin >> input;
-        student.setAadharNo(input);
-        if (student.getAadhar() == input) break; // Only accepted if set successfully
+        setAadharNo(input);
+        if (getAadhar() == input) break; // Only accepted if set successfully
     }
 
     // Password Input
@@ -243,7 +244,7 @@ public:
         cin >> pass2;
 
         if (pass1 == pass2 && pass1.length() >= 6) {
-            student.Password = pass1;
+            Password = pass1;
             break;
         } else {
             cout << "Passwords do not match or too short (min 6 characters). Try again." << endl;
@@ -254,8 +255,8 @@ public:
     while (true) {
         cout << "Enter Email: ";
         cin >> input;
-        if (student.IsValidEmail(input)) {
-            student.email = input;
+        if (IsValidEmail(input)) {
+            email = input;
             break;
         } else {
             cout << "Invalid email format. Example: example@domain.com" << endl;
@@ -265,6 +266,72 @@ public:
 
     
 };
+
+//Student data save to file.
+void SaveStudentToFile(const Student& student){
+    ofstream file("student.txt",ios::app); // open in append mode
+    if(file.is_open()){
+         file << student.fname << " " << student.lname << ","
+             << student.percentage << ","
+             << student.DOB << ","
+             << student.getPhoneNo() << ","
+             << student.getAadhar() << ","
+             << student.email << endl;
+        file.close(); 
+    }
+    else {
+        cout << "Error: Could not open students.txt" << endl;
+    }
+}
+
+    // View course in file.
+    void ViewCourses(const vector<Course>& courses) {
+    cout << "\n--- Available Courses ---" << endl;
+    cout << "Code\t\tName\t\tSeats Left" << endl;
+    for (const Course& c : courses) {
+        cout << c.code << "\t\t" << c.name << "\t" << (c.seat - c.enrolled) << endl;
+    }
+}
+
+    //Add Course
+    void AddCourse(vector<Course>& course){
+        string name,code;
+        int MinPercentage,seat;
+
+        cout<<"Enter course name: ";
+        cin.ignore();
+        getline(cin,name);
+
+        cout<<"Enter course code(UPPERCASE, no spaces): ";
+        cin>>code;
+
+        //Check for duplicate code
+        for(const Course& c : course){
+            if(c.code == code){
+                cout<<"Course with this code already exists."<<endl;
+                return; // do NOT continue!!
+            }
+        }
+    cout << "Enter minimum percentage required: ";
+    cin >> MinPercentage;
+
+    cout << "Enter total seats: ";
+    cin >> seat;
+
+    course.push_back(Course(name, code, MinPercentage, seat));
+
+    // Save to file
+    ofstream file("course.txt", ios::app);
+    if (file.is_open()) {
+        file << name << "," << code << "," << MinPercentage << "," << seat << ",0\n";
+        file.close();
+        cout << "Course added and saved successfully.\n";
+    } else {
+        cout << "Failed to open courses.txt\n";
+    }
+} 
+
+
 
 
 
@@ -286,15 +353,51 @@ int main(){
         Course("PYQ Practice Batch", "PYQBATCH", 50, 60)
     };
 
-    Student student;
-    student.RegisterStudent(student);  //Function call
-    cout << "\nStudent information:" << endl;
-    cout << "Name       : " << student.fname << " " << student.lname << endl;
-    cout << "Percentage : " << student.percentage << "%" << endl;
-    cout << "DOB        : " << student.DOB << endl;
-    cout << "Phone No.  : " << student.getPhoneNo() << endl;
-    cout << "Aadhar No. : " << student.getAadhar() << endl;
-    cout << "Email      : " << student.email << endl;
+    vector<Student> student;
+    int choice;
+
+    do {
+        cout << "\n===== Course Registration Menu =====" << endl;
+        cout << "1. Register New Student" << endl;
+        cout << "2. View All Courses" << endl;
+        cout << "3. Add New Course" << endl;
+        cout << "0. Exit\nChoice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:{
+                Student s;
+                s.RegisterStudent();
+                student.push_back(s);
+                SaveStudentToFile(s);
+
+                cout << "\nStudent information:" << endl;
+                cout << "Name       : " << s.fname << " " << s.lname << endl;
+                cout << "Percentage : " << s.percentage << "%" << endl;
+                cout << "DOB        : " << s.DOB << endl;
+                cout << "Phone No.  : " << s.getPhoneNo() << endl;
+                cout << "Aadhar No. : " << s.getAadhar() << endl;
+                cout << "Email      : " << s.email << endl;
+                break;
+                }
+            case 2:{
+                ViewCourses(courses);
+                break;
+                }
+            case 3:{
+                AddCourse(courses);
+                break;
+                }
+            case 0:{
+                cout << "Exiting system.\n";
+                break;
+                }
+            default:
+                cout << "Invalid choice. Try again.\n";
+        }
+
+    } while (choice != 0);
 
     return 0;
+
 }
