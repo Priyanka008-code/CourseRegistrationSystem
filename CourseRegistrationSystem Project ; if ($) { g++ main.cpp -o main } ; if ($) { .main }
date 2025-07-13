@@ -1,0 +1,9 @@
+[33m2e5dd30[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Fix CSV formatting for students with multiple course registrations
+[33m8528b48[m Start fresh with new codebase
+[33m0d2a977[m Complete codebase rewrite
+[33md6e9b70[m Add file and student information
+[33me4fada8[m Add list of JEE coaching batches with eligibility and seat info
+[33m5de262b[m Add email input with basic validation in Student registration
+[33m5507815[m Add student details with input validation
+[33m723d159[m Create README.md
+[33ma7cbc4a[m add main.cpp

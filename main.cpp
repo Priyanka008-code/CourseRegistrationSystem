@@ -253,9 +253,10 @@ void exportCSV(){
             << "\"" << s.email << "\","
             << "\"" << s.phone << "\","
             << "\"" << s.percentage << "\","
-            << "\"" << s.dob << "\"";
+            << "\"" << s.dob << "\",";
 
             // Join courses with commas
+            out<<"\"";
             for (size_t i = 0; i < s.registeredCourses.size(); ++i) {
                 out << s.registeredCourses[i];
                 if (i != s.registeredCourses.size() - 1)
