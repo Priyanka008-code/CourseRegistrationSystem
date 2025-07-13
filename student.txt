@@ -1,2 +1,2 @@
-anuj,a@gmail.com,9876543210,66,12-12-2012,,PYQBATCH,CRASH30
+anuj,a@gmail.com,9876543210,66,12-12-2012,,PYQBATCH
 shiv,shiv@gmail.com,9876543211,70,02-02-2007,
