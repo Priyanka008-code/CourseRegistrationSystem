@@ -254,11 +254,15 @@ void exportCSV(){
             << "\"" << s.phone << "\","
             << "\"" << s.percentage << "\","
             << "\"" << s.dob << "\"";
-            // << "\"" << s.coursecode << "\"";
 
-        for (const string& c : s.registeredCourses)
-            out << ",\"" << c << "\"";
-        out << "\n";
+            // Join courses with commas
+            for (size_t i = 0; i < s.registeredCourses.size(); ++i) {
+                out << s.registeredCourses[i];
+                if (i != s.registeredCourses.size() - 1)
+                    out << ", ";
+        }
+
+        out << "\"\n";  // End the line after closing quotes
     }
     out.close();
     cout<<"Exported to registrations.csv\n";
