@@ -1,403 +1,487 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <cctype> // for isdigit
-#include <fstream> // for file
+#include <regex>
+#include <sstream>
+#include <fstream>
 using namespace std;
 
+//Validitation Function.
+bool isValidName(const string& name) {
+    return regex_match(name, regex("^[A-Za-z ]+$"));
+}
+
+bool isValidEmail(const string& email) {
+    return regex_match(email, regex(R"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)"));
+}
+
+bool isValidPhone(const string& phone) {
+    return regex_match(phone, regex("^[6-9][0-9]{9}$"));
+}
+
+bool isValidPercentage(float p) {
+    return p >= 0 && p <= 100;
+}
+
+bool isValidDOB(const string& dob){
+    return regex_match(dob,regex(R"(\d{2}-\d{2}-\d{4})"));
+}
+
+//Student Class
+class Student{
+    public:
+    string name,phone,email,dob,coursecode;
+    float percentage;
+    vector<string>registeredCourses;
+
+    //Student Constructor
+    Student(string name, string email, string phone, float percentage, string dob,string coursecode)
+        : name(name), email(email), phone(phone), percentage(percentage), dob(dob),coursecode(coursecode){}
+
+    //Student Registration
+    static Student RegisterStudent() {
+        string name, email, phone, dob,coursecode;
+        float percentage;
+        bool isDuplicateStudent(const string& email, const string& phone);
+
+        do {
+            cout << "Enter Your Name: ";
+            getline(cin>>ws,name);
+            if (!isValidName(name)) cout << "Invalid name!\n";
+        } while (!isValidName(name));
+
+        do {
+            cout << "Enter Your Email Id: ";
+            cin >> email;
+            if (!isValidEmail(email)) cout << "Invalid email id!\n";
+            else if(isDuplicateStudent(email, "")) {
+                cout << "This email is already registered!\n";
+                email.clear();  // To force repeat
+            }
+        } while (!isValidEmail(email)|| email.empty());
+
+        do {
+            cout << "Enter Your Phone Number: ";
+            cin >> phone;
+            if (!isValidPhone(phone)) cout << "Invalid phone number!\n";
+            else if (isDuplicateStudent("", phone)) {
+                cout << "This phone number is already registered!\n";
+                phone.clear();  // To force repeat
+            }
+        } while (!isValidPhone(phone)|| phone.empty());
+
+        do {
+            cout << "Enter Your 12th Percentage: ";
+            cin >> percentage;
+            if (!isValidPercentage(percentage)) cout << "Invalid percentage!\n";
+        } while (!isValidPercentage(percentage));
+
+        do{
+            cout << "Enter DOB (dd-mm-yyyy): ";
+            cin >> dob;
+            if(!isValidDOB(dob)) cout << "Invalid DOB.";
+        } while(!isValidDOB(dob));
+        cout<<"Student Registered Successfully."<<endl;
+        return Student(name, email, phone, percentage,dob,"");
+    }
+
+    void display() const {
+        cout << "Name: " << name
+            << " | Email: " << email
+            << " | Phone: " << phone
+            << " | %: " << percentage
+            << " | DOB: " << dob;
+
+        if (registeredCourses.empty()) {
+            cout << " | Registered Courses: None";
+        } else {
+            cout << " | Registered Courses: ";
+            for (size_t i = 0; i < registeredCourses.size(); ++i) {
+                cout << registeredCourses[i];
+                if (i != registeredCourses.size() - 1)
+                    cout << ", ";
+            }
+        }
+
+        cout << endl;
+    }
+
+    //save to file
+    void SaveStudentToFile(ofstream& out) const{
+        out<<name<<","<<email<<","<<phone<<","<<percentage<<","<<dob<<","<<coursecode;
+        for(const string& c : registeredCourses){
+            out<<","<<c;
+        }
+        out<<"\n";
+    }
+};
+
+//Course Class
 class Course{
-public:
-    string name;
-    string code;
-    int MinPercentage;
-    int seat;
+    public:
+    string coursename,coursecode;
+    float minPercent;
+    int seats;
     int enrolled;
 
-    Course(string name,string code,int MinPersentage,int seat)
-        : name(name), code(code), MinPercentage(MinPercentage), seat(seat), enrolled(0) {}
+    //Course Constructor
+    Course(string coursename,string coursecode,float minPercent,int seats)
+        :coursename(coursename),coursecode(coursecode),minPercent(minPercent),seats(seats),enrolled(0){}
 
-    bool IsEligible(int percentage) const{
-        return percentage >= MinPercentage;
+    bool isEligible(float percent) const {
+        return percent >= minPercent;
     }
 
-    bool IsVacant() const{
-        return seat > enrolled;
+    bool isVacantSeats() const {
+        return enrolled < seats;
     }
 
+    void display() const {
+        cout << coursecode << " - " << coursename << " | Min %: " << minPercent
+             << " | Seats: " << seats << " | Enrolled: " << enrolled
+             << " | Left: " << (seats - enrolled) << endl;
+    }
 };
 
+vector<Student> students;
+vector<Course> courses;
 
-class Student{
-private:
-    string Password;
-
-public:
-    string fname;
-    string lname;
-    float percentage;
-    string phone_number;
-    string aadhar_number;
-    string email;
-    string DOB;
-    vector<string> course;
-
-    bool IsRegistered(string courseCode) const{
-        return find(course.begin(),course.end(),courseCode) != course.end();
-
-    };
-
-    // fname only alphabate and not empty.
-    bool IsValidfname(const string& fname){
-        if(fname.empty()){
-            return false;
+//find student by email
+Student* findStudentByEmail(const string& email) {
+    for (Student& s : students) {
+        if (s.email == email) {
+            return &s;  // return address of the student
         }
-        for(char ch: fname){
-            if(!isalpha(ch)) return false;
-        } 
-        return true;
     }
+    return nullptr;  // not found
+}
 
+//Register to course
+void registerToCourse(Student& s, vector<Course>& courses) {
+    string code;
+    cout << "Enter your course code: ";
+    cin >> code;
 
-    // lname only alphabate and not empty.
-    bool IsValidlname(const string& lname){
-        if(lname.empty()){
-            return false;
-        }
-        for(char ch: lname){
-            if(!isalpha(ch)) return false;
-        } 
-        return true;
-    }
-
-    // percentage is only integer value .
-    bool IsValidPercentage(const string& percentage){
-        if(percentage.empty()){
-            return false;
-        }
-
-        if (percentage.length() > 3) return false;
-
-        for(char ch: percentage){
-        if(!isdigit(ch)) return false;
-        }
-        return true;
-    }
-
-    //DOB formate check dd-mm-yyyy 
-    bool IsValidDOB(const string& dob){
-        if(dob.length()!=10) return false;
-        if((dob[2] !='-') &&(dob[5]!='-')){
-            return false;
-        }
-        for(int i=0;i<10;i++){
-            if(i==2 || i==5){
-                continue;
+    for (Course& c : courses) {
+        if (c.coursecode == code) {
+            if (!c.isEligible(s.percentage)) {
+                cout << "Not eligible for this course.\n";
+                return;
             }
-            if(!isdigit(dob[i])){
-                return false;
+            if (!c.isVacantSeats()) {
+                cout << "No seats available.\n";
+                return;
+            }
+            if (find(s.registeredCourses.begin(), s.registeredCourses.end(), code) != s.registeredCourses.end()) { //avoid duplicate registeration
+                cout << "Already registered in this course.\n";
+                return;
+            }
+
+            c.enrolled++;
+            s.registeredCourses.push_back(code);
+            cout << "Successfully registered in " << c.coursename << "!\n";
+            return;
+        }
+    }
+    cout << "Course not found.\n";
+}
+
+//View Registered Course
+void showRegisteredCourses(const Student& s,vector<Course>& courses) {
+    if(s.registeredCourses.empty()){
+        cout<<"No course registered."<<endl;
+        return;
+    }
+    cout << "Registered Courses:\n";
+    for (const string& code : s.registeredCourses) {
+        for (const Course& c : courses) {
+            if (c.coursecode == code) {
+                cout << "- " << c.coursecode << " | " << c.coursename << endl;
             }
         }
-        return true;
+    }
+}
+
+//drop course
+void dropCourse(Student& s){
+    string code;
+    cout<<"Enter Course Code to Drop: ";
+    cin>>code;
+    auto it=find(s.registeredCourses.begin(),s.registeredCourses.end(),code);
+    if(it!=s.registeredCourses.end()){
+        s.registeredCourses.erase(it);
+        for(Course& c : courses){
+            if(c.coursecode==code){
+                c.enrolled--;
+                break;
+            }
+        }
+        cout<<"Course dropped successfully."<<endl;
+    }else cout<<"You are not registered in this course."<<endl;
+}
+
+//sort student by name
+void sortStudentsByName(vector<Student>& registeredStudent) {
+    if (registeredStudent.empty()) {
+        cout << "No students registered yet.\n";
+        return;
     }
 
+    sort(registeredStudent.begin(), registeredStudent.end(), [](const Student& a, const Student& b) {
+        string nameA = a.name, nameB = b.name;
+        transform(nameA.begin(), nameA.end(), nameA.begin(), ::toupper);
+        transform(nameB.begin(), nameB.end(), nameB.begin(), ::toupper);
+        return nameA < nameB;
+    });
 
-    // Validitation for Aadhar No. 
-    bool IsValidAadhar(const string& aadhar){
-        if(aadhar.length()!=12){
-            return false;
-        }
-        for(char ch : aadhar){
-            if(!isdigit(ch)) return false;
-        }
-        return true;
+    cout << "\n== Students Sorted Alphabetically ==\n";
+    for (const auto& s : registeredStudent) {
+        s.display();
     }
+}
 
-    void setAadharNo(const string& NewAadharNo){
-        if(IsValidAadhar(NewAadharNo)){
-            aadhar_number=NewAadharNo;
-        }
-        else{
-            cout<<"Invalid Aadhar No. It must be 12 digit (only number)."<<endl;
-        }
+// Exports all registered student data to a CSV file named "registrations.csv".
+void exportCSV(){
+    ofstream out("registrations.csv");
+    if(!out){
+        cout << "Error : Could not open registrations.csv"<<endl;
+        return;
     }
+    out<<"Name,Email,Phone,Percentage,DOB,Registered Course\n";
+    for(const Student& s : students){
+        out << "\"" << s.name << "\","
+            << "\"" << s.email << "\","
+            << "\"" << s.phone << "\","
+            << "\"" << s.percentage << "\","
+            << "\"" << s.dob << "\"";
+            // << "\"" << s.coursecode << "\"";
 
-    string getAadhar() const{
-        return aadhar_number;
+        for (const string& c : s.registeredCourses)
+            out << ",\"" << c << "\"";
+        out << "\n";
     }
+    out.close();
+    cout<<"Exported to registrations.csv\n";
+}
 
-    // Valid phone number 10 digit nd all are integer.
-    bool IsValidPhoneNo(const string& phone){
-        if(phone.length()!=10){
-            return false;
+//file headling function
+void loadCourse(){
+    ifstream in("course.txt");
+    string n,c;
+    float p;
+    int s;
+    while(in>>ws && getline(in,n,',')){
+        getline(in,c,',');
+        in>>p;
+        in.ignore();
+        in>>s;
+        in.ignore();
+        courses.push_back(Course(n,c,p,s));
+    }
+    in.close();
+}
+
+void loadStudent() {
+    ifstream in("student.txt");
+    string line;
+    while (getline(in, line)) {
+        stringstream ss(line);
+        string name, email, phone, dob, coursecode, percentageStr;
+        float percentage;
+
+        // Read fixed fields
+        getline(ss, name, ',');
+        getline(ss, email, ',');
+        getline(ss, phone, ',');
+        getline(ss, percentageStr, ',');
+        percentage = stof(percentageStr);  // string to float
+        getline(ss, dob, ',');
+        getline(ss, coursecode, ',');
+
+        Student s(name, email, phone, percentage, dob, coursecode);
+
+        // Read remaining fields as registered courses
+        string course;
+        while (getline(ss, course, ',')) {
+            s.registeredCourses.push_back(course);
+
+            //Update enrolled count for the course
+            for (Course& c : courses) {
+                if (c.coursecode == course) {
+                    c.enrolled++;  // Increment enrolled count
+                    break;
+                }
+            }
         }
-        for(char ch : phone){
-            if(!isdigit(ch)) return false;
-        }
-        return true;
+
+        students.push_back(s);
     }
-
-    void setPhoneNo(const string& NewPhoneNo){
-        if(IsValidPhoneNo(NewPhoneNo)){
-            phone_number=NewPhoneNo;
-        }
-        else{
-            cout<<"Invalid Phone No. It must be 10 digit(only number)."<<endl;
-        }
-    }
-
-    string getPhoneNo() const{
-        return phone_number;
-    }
-
-
-    //Valid Email(Contain @ and .)
-    bool IsValidEmail(const string& email){
-        auto atPos = email.find('@');
-        auto dotPos = email.find('.', atPos);
-
-        if (atPos == string::npos || dotPos == string::npos || atPos == 0 || dotPos <= atPos + 1 || dotPos == email.length() - 1) {
-            return false;
-        }
-        return true;
-    }
-
-
-
-    // Registration Function.
-
-    void RegisterStudent(){
-    string input;
-        
-    // First Name Input.
-    while(true){
-        cout<<"Enter your first name: ";
-        cin>>input;
-        if(IsValidfname(input)){
-            fname=input;
-            break;
-        }
-        else{
-            cout<<"Invalid first name. Please use only alphabets."<<endl;
-        }
-    }
-
-    // Last Name Input.
-    while(true){
-        cout<<"Enter your last name: ";
-        cin>>input;
-        if(IsValidlname(input)){
-            lname=input;
-            break;
-        }
-        else{
-            cout<<"Invalid last name. Please use only alphabets."<<endl;
-        }
-    }
-
-
-    //Percentage Input
-    while(true){
-        cout<<"Enter percentage(only number and without decimal e.g. 55 ): ";
-        cin>>input;
-         if (IsValidPercentage(input)) {
-            percentage = stoi(input);
-            break;
-        } else {
-            cout << "Enter percentage (only whole numbers, e.g., 55): " << endl;
-        }
-    }
-
-    // Date of Birth Input
-    while (true) {
-        cout << "Enter DOB (dd-mm-yyyy): ";
-        cin >> input;
-        if (IsValidDOB(input)) {
-            DOB = input;
-            break;
-        } else {
-            cout << "Invalid DOB format. Please use dd-mm-yyyy." << endl;
-        }
-    }
-
-    // Phone Number Input
-    while (true) {
-        cout << "Enter Phone Number (10 digits): ";
-        cin >> input;
-        setPhoneNo(input);
-        if (getPhoneNo() == input) break; // Only accepted if set successfully
-    }
-
-    // Aadhar Number Input
-    while (true) {
-        cout << "Enter Aadhar Number (12 digits): ";
-        cin >> input;
-        setAadharNo(input);
-        if (getAadhar() == input) break; // Only accepted if set successfully
-    }
-
-    // Password Input
-    while (true) {
-        string pass1, pass2;
-        cout << "Create a password (min 6 characters): ";
-        cin >> pass1;
-        cout << "Confirm your password: ";
-        cin >> pass2;
-
-        if (pass1 == pass2 && pass1.length() >= 6) {
-            Password = pass1;
-            break;
-        } else {
-            cout << "Passwords do not match or too short (min 6 characters). Try again." << endl;
-        }
-    }
-
-    // Email Input
-    while (true) {
-        cout << "Enter Email: ";
-        cin >> input;
-        if (IsValidEmail(input)) {
-            email = input;
-            break;
-        } else {
-            cout << "Invalid email format. Example: example@domain.com" << endl;
-        }
-    }
-    }
-
+    in.close();
+}
     
-};
-
-//Student data save to file.
-void SaveStudentToFile(const Student& student){
-    ofstream file("student.txt",ios::app); // open in append mode
-    if(file.is_open()){
-         file << student.fname << " " << student.lname << ","
-             << student.percentage << ","
-             << student.DOB << ","
-             << student.getPhoneNo() << ","
-             << student.getAadhar() << ","
-             << student.email << endl;
-        file.close(); 
+void saveCourse(){
+    ofstream out("course.txt");
+    for(const Course& c : courses){
+        out<<c.coursename<<","<<c.coursecode<<","<<c.minPercent<<","<<c.seats<<endl;
     }
-    else {
-        cout << "Error: Could not open students.txt" << endl;
-    }
+    out.close();
 }
 
-    // View course in file.
-    void ViewCourses(const vector<Course>& courses) {
-    cout << "\n--- Available Courses ---" << endl;
-    cout << "Code\t\tName\t\tSeats Left" << endl;
-    for (const Course& c : courses) {
-        cout << c.code << "\t\t" << c.name << "\t" << (c.seat - c.enrolled) << endl;
+void saveStudents(){
+    ofstream out("student.txt");
+    for(const Student& s : students){
+        s.SaveStudentToFile(out);
     }
+    out.close();
 }
 
-    //Add Course
-    void AddCourse(vector<Course>& course){
-        string name,code;
-        int MinPercentage,seat;
-
-        cout<<"Enter course name: ";
-        cin.ignore();
-        getline(cin,name);
-
-        cout<<"Enter course code(UPPERCASE, no spaces): ";
-        cin>>code;
-
-        //Check for duplicate code
-        for(const Course& c : course){
-            if(c.code == code){
-                cout<<"Course with this code already exists."<<endl;
-                return; // do NOT continue!!
-            }
+//duplicate student
+bool isDuplicateStudent(const string& email, const string& phone) {
+    for (const Student& s : students) {
+        if ((!email.empty() && s.email == email) || (!phone.empty() && s.phone == phone)) {
+            return true;
         }
-    cout << "Enter minimum percentage required: ";
-    cin >> MinPercentage;
-
-    cout << "Enter total seats: ";
-    cin >> seat;
-
-    course.push_back(Course(name, code, MinPercentage, seat));
-
-    // Save to file
-    ofstream file("course.txt", ios::app);
-    if (file.is_open()) {
-        file << name << "," << code << "," << MinPercentage << "," << seat << ",0\n";
-        file.close();
-        cout << "Course added and saved successfully.\n";
-    } else {
-        cout << "Failed to open courses.txt\n";
     }
-} 
+    return false;
+}
 
+int main() {
+    //Load courses from file (if exists)
+    loadCourse();
+    loadStudent();
 
+    if (courses.empty()) {
+        courses = {
+            Course("JEE Advanced Batch", "ADVJEE", 90, 20),
+            Course("Main + Advanced Combo Batch", "COMBOJEE", 85, 30),
+            Course("JEE Mains Only Batch", "MAINJEE", 75, 35),
+            Course("Crash Course (30 Days)", "CRASH30", 65, 40),
+            Course("One-Shot Revision Batch", "ONESHOT", 60, 50),
+            Course("Question Bank Solving Course", "QBSOLVE", 55, 50),
+            Course("PYQ Practice Batch", "PYQBATCH", 50, 60)
+        };
+    }
 
-
-
-
-
-
-int main(){
-    cout << "----------------------------------------" << endl;
-    cout << " Welcome to our course registration system" << endl;
-    cout << "----------------------------------------\n" << endl;
-
-    vector<Course> courses = {
-        Course("JEE Advanced Batch", "ADVJEE", 90, 20),
-        Course("Main + Advanced Combo Batch", "COMBOJEE", 85, 30),
-        Course("JEE Mains Only Batch", "MAINJEE", 75, 35),
-        Course("Crash Course (30 Days)", "CRASH30", 65, 40),
-        Course("One-Shot Revision Batch", "ONESHOT", 60, 50),
-        Course("Question Bank Solving Course", "QBSOLVE", 55, 50),
-        Course("PYQ Practice Batch", "PYQBATCH", 50, 60)
-    };
-
-    vector<Student> student;
     int choice;
-
     do {
-        cout << "\n===== Course Registration Menu =====" << endl;
-        cout << "1. Register New Student" << endl;
-        cout << "2. View All Courses" << endl;
-        cout << "3. Add New Course" << endl;
-        cout << "0. Exit\nChoice: ";
-        cin >> choice;
+        cout << "\n=== Course Registration Menu ===\n";
+        cout << "1. Register New Student\n";
+        cout << "2. View All Courses\n";
+        cout << "3. Register to Course\n";
+        cout << "4. View Registered Courses\n";
+        cout << "5. Drop Course\n";
+        cout << "6. View All Students (Sorted by Name)\n";
+        cout << "7. Export Registrations to CSV\n";
+        cout << "0. Exit\n";
+        cout << "Choice: ";
 
+        cin >> choice;
         switch (choice) {
             case 1:{
-                Student s;
-                s.RegisterStudent();
-                student.push_back(s);
-                SaveStudentToFile(s);
-
-                cout << "\nStudent information:" << endl;
-                cout << "Name       : " << s.fname << " " << s.lname << endl;
-                cout << "Percentage : " << s.percentage << "%" << endl;
-                cout << "DOB        : " << s.DOB << endl;
-                cout << "Phone No.  : " << s.getPhoneNo() << endl;
-                cout << "Aadhar No. : " << s.getAadhar() << endl;
-                cout << "Email      : " << s.email << endl;
+                Student s = Student::RegisterStudent();
+                students.push_back(s);  // Store student in the list
                 break;
-                }
+            }
             case 2:{
-                ViewCourses(courses);
+                for (const Course& c : courses)
+                    c.display();
                 break;
+            }
+            case 3: {
+                if (students.empty()) {
+                    cout << "No student registered yet.\n";
+                    break;
                 }
-            case 3:{
-                AddCourse(courses);
-                break;
-                }
-            case 0:{
-                cout << "Exiting system.\n";
-                break;
-                }
-            default:
-                cout << "Invalid choice. Try again.\n";
-        }
+                
+                string email;
+                cout << "Enter your registered email: ";
+                cin >> email;
 
+                for (const Course& c : courses)
+                    c.display();
+
+                Student* student = findStudentByEmail(email);  // pointer to student
+                if (student == nullptr) {
+                    cout << "Student not found.\n";
+                    break;
+                }
+                string choice;
+                do {
+                    registerToCourse(*student, courses);  // pass by reference using '*'
+                    cout << "Do you want to try registering for another course? (yes/no): ";
+                    cin >> choice;
+                } while (choice == "yes" || choice == "y");
+                
+                saveStudents();
+                break;
+            }
+            case 4: {
+                if (students.empty()) {
+                    cout << "No student registered yet.\n";
+                    break;
+                }
+                string email;
+                cout << "Enter your registered email to view courses: ";
+                cin >> email;
+
+                Student* student = findStudentByEmail(email);
+                if (student == nullptr) {
+                    cout << "Student not found.\n";
+                    break;
+                }
+
+                showRegisteredCourses(*student, courses);
+                break;
+            }
+            case 5: {
+                if (students.empty()) {
+                    cout << "No student registered yet.\n";
+                    break;
+                }
+                string email;
+                cout << "Enter your registered email for drop course: ";
+                cin >> email;
+
+                Student* student = findStudentByEmail(email);  // pointer to student
+                if (student == nullptr) {
+                    cout << "Student not found.\n";
+                    break;
+                }
+
+                string choice;
+                do {
+                    // Show registered courses before asking to drop
+                    showRegisteredCourses(*student, courses);
+
+                    if (student->registeredCourses.empty()) {
+                        break;  // No need to continue if no registered courses
+                    }
+
+                    dropCourse(*student);
+
+                    cout << "Do you want to drop another course? (yes/no): ";
+                    cin >> choice;
+                } while (choice == "yes" || choice == "y");
+
+                saveStudents();  // Save after any course drops
+                break;
+            }
+            
+            case 6:
+                sortStudentsByName(students);
+                break;
+            case 7:
+                exportCSV();
+                break;
+            case 0:
+                saveCourse();
+                //saveStudents();
+                cout << "Thank you for using our Course Registration System.\n";
+                break;
+            default:
+                cout << "Invalid choice.\n";
+        }
     } while (choice != 0);
 
     return 0;
-
 }

@@ -1,0 +1,7 @@
+JEE Advanced Batch,ADVJEE,90,20
+Main + Advanced Combo Batch,COMBOJEE,85,30
+JEE Mains Only Batch,MAINJEE,75,35
+Crash Course (30 Days),CRASH30,65,40
+One-Shot Revision Batch,ONESHOT,60,50
+Question Bank Solving Course,QBSOLVE,55,50
+PYQ Practice Batch,PYQBATCH,50,60
